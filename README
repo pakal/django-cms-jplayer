@@ -6,5 +6,6 @@ django-cms-jplayer
 Dependencies
 ============
 
-* jPlayer
+* jPlayer JS file
+* jPlayer Playlist JS add-on
 * django-cms (optional)
