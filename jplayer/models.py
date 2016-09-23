@@ -5,20 +5,23 @@ from jplayer.utils import safe_json
 
 
 class JPlayer(models.Model):
-    
+
+    class Meta:
+        verbose_name_plural = "Jplayers"
+
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255, unique=True)
     songs = models.ManyToManyField('jplayer.Song', related_name='players')
     autoplay = models.BooleanField(default=False)
-    
+
     def __unicode__(self):
         return self.name
-    
+
     def get_json_playlist(self):
         if not hasattr(self, '_cached_playlist'):
             self._cached_playlist = safe_json(self.playlist())
         return self._cached_playlist
-    
+
     def playlist(self):
         playlist = []
         ogg_support = self.ogg_support()
@@ -36,38 +39,42 @@ class JPlayer(models.Model):
             data['credits_url'] = song.credits.url if song.credits and song.credits.url else False
             playlist.append(data)
         return playlist
-    
+
     def ogg_support(self):
         return not self.songs.filter(ogg_file__exact='').count()
-    
+
     def get_json_ogg_support(self):
         return safe_json(self.ogg_support())
-    
+
     def get_base_path(self):
         return safe_json(settings.JPLAYER_BASE_PATH)
-    
+
     def get_json_autoplay(self):
         return safe_json(self.autoplay)
 
-    
+
 class Artist(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
     url = models.URLField(blank=True)
-    
+
     def __unicode__(self):
         return self.name
-    
-    
+
+
 class Credits(models.Model):
+
+    class Meta:
+        verbose_name_plural = "credits" # else ugly auto-plural...
+
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
     url = models.URLField(blank=True)
-    
+
     def __unicode__(self):
         return self.name
-    
-    
+
+
 class Song(models.Model):
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=255)
@@ -75,16 +82,16 @@ class Song(models.Model):
     credits = models.ForeignKey(Credits, related_name='songs', blank=True, null=True)
     mp3_file = models.FileField(upload_to='songs/mp3/')
     ogg_file = models.FileField(upload_to='songs/ogg/', blank=True, null=True)
-    
+
     def __unicode__(self):
         return self.title
-    
+
 
 
 if 'cms' in settings.INSTALLED_APPS:
     from cms.models import CMSPlugin
     class JPlayerIntermediate(CMSPlugin):
         player = models.ForeignKey(JPlayer, verbose_name=_('JPlayer'))
-        
+
         def __unicode__(self):
             return self.player.name
